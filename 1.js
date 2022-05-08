@@ -10,11 +10,13 @@ const cropName = document.querySelector(".rounded-end");
 const resultTxt = document.querySelector(".show-result");
 // 下拉式選單排序
 const select = document.querySelector(".sort-select");
-console.log(select.value);
+const sortAdvanced = document.querySelector(".js-sort-advanced");
+
 let data = [];
-let cropTypeData = [];
+let dataList = [];
 let cropType = "";
-let searchData = [];
+let sortBy = "";
+let upDown = "";
 
 //資料串接功能  渲染資料
 function renderData(data) {
@@ -49,52 +51,66 @@ cropBtns.addEventListener("click", chooseCropType);
 
 function chooseCropType(e) {
     if (e.target.nodeName !== "BUTTON") return;
-    cropName.value = "";
-    cropType = e.target.dataset.type;
+    let type = e.target.dataset.type;
     cropBtn.forEach(i => {
-        if (i.dataset.type !== cropType) {
+        if (i.dataset.type !== type) {
             i.classList.remove("active");
         }
     });
     e.target.classList.toggle("active");
-
+    if (type !== cropType) {
+        cropType = type;
+    } else {
+        cropType = "";
+    }
+    resultTxt.textContent = "";
+    cropName.value = "";
     if (e.target.classList.contains("active")) {
         if (cropType) {
-            cropTypeData = data.filter(i => i.種類代碼 === cropType);
+            dataList = data.filter(i => i.種類代碼 === cropType);
         }
     } else {
-        cropTypeData = data
+        dataList = data
     }
-    renderData(cropTypeData);
+    productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">資料載入中...</td></tr>`
+    setTimeout(() => {
+        renderData(dataList);
+    }, 1000);
 }
 
 // 搜尋功能
 searchBtn.addEventListener("click", searchCrop);
 
 function searchCrop() {
-    if (cropName.value.trim() === "") {
+    if (!cropName.value.trim()) {
         resultTxt.textContent = "請輸入作物名稱！";
         resultTxt.classList.add("text-danger");
+        productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">請輸入並搜尋想比價的作物名稱^＿^</td></tr>`
         return;
     }
     cropBtn.forEach(i => {
         i.classList.remove("active");
     });
-    searchData = data.filter(i => i.作物名稱.match(cropName.value));
-    if (searchData.length === 0) {
+    
+    dataList = data.filter(i => i.作物名稱.match(cropName.value));
+    if (!dataList.length) {
         resultTxt.textContent = "";
         productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">查詢不到當日的交易QQ</td></tr>`
         return;
     }
     resultTxt.classList.remove("text-danger");
-    resultTxt.textContent = `查看「${cropName.value}」的比價結果，共有 ${searchData.length} 筆`
-    cropType = searchData[0].種類代碼;
+    resultTxt.textContent = `查看「${cropName.value}」的比價結果`;
+    cropType = dataList[0].種類代碼;
     for (i = 0; i < cropBtn.length; i++) {
         if (cropBtn[i].dataset.type === cropType) {
             cropBtn[i].classList.add("active");
         }
     }
-    renderData(searchData);
+    productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">資料載入中...</td></tr>`
+    setTimeout(() => {
+        resultTxt.textContent = `查看「${cropName.value}」的比價結果，共有「 ${dataList.length} 」筆`
+        renderData(dataList);
+    }, 1000);
 }
 // 優化鍵盤搜尋
 cropName.addEventListener('keypress', (e) => {
@@ -105,7 +121,33 @@ cropName.addEventListener('keypress', (e) => {
 
 // 下拉式選單排序
 select.addEventListener("change", selectSort);
-function selectSort(e){
-    let sortValue = e.target.value;
-    console.log(sortValue);
+function selectSort(e) {
+    console.log("SS");
+    sortBy = e.target.value.slice(1, select.value.length - 2);
+    console.log(sortBy);
+    upDown = "down"
+    sortData();
+}
+
+sortAdvanced.addEventListener("click", upAndDown)
+
+function upAndDown(e) {
+    if (e.target.nodeName !== "I") {
+        return;
+    }
+    sortBy = e.target.closest("div").textContent.trim();
+    upDown = e.target.dataset.sort
+    sortData();
+}
+
+function sortData() {
+    if (!dataList.length) {
+        return;
+    }
+    if (upDown === "down") {
+        dataList = dataList.sort((a, b) => a[sortBy] - b[sortBy]);
+    } else if (upDown === "up") {
+        dataList = dataList.sort((a, b) => b[sortBy] - a[sortBy]);
+    }
+    renderData(dataList);
 }
