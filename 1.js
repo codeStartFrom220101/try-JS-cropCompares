@@ -11,6 +11,9 @@ const resultTxt = document.querySelector(".show-result");
 // 下拉式選單排序
 const select = document.querySelector(".sort-select");
 const sortAdvanced = document.querySelector(".js-sort-advanced");
+const sortAdvancedI = document.querySelectorAll(".js-sort-advanced i")
+// mobile select
+const mobileSelect = document.querySelector(".mobile-select")
 
 let data = [];
 let dataList = [];
@@ -91,7 +94,7 @@ function searchCrop() {
     cropBtn.forEach(i => {
         i.classList.remove("active");
     });
-    
+
     dataList = data.filter(i => i.作物名稱.match(cropName.value));
     if (!dataList.length) {
         resultTxt.textContent = "";
@@ -121,12 +124,19 @@ cropName.addEventListener('keypress', (e) => {
 
 // 下拉式選單排序
 select.addEventListener("change", selectSort);
+
 function selectSort(e) {
-    console.log("SS");
+    if (!e.target.value) {
+        return;
+    }
+    sortAdvancedI.forEach(i => {
+        i.classList.remove("text-danger");
+    });
     sortBy = e.target.value.slice(1, select.value.length - 2);
     console.log(sortBy);
-    upDown = "down"
+    upDown = "down";
     sortData();
+    upDown = "";
 }
 
 sortAdvanced.addEventListener("click", upAndDown)
@@ -137,6 +147,15 @@ function upAndDown(e) {
     }
     sortBy = e.target.closest("div").textContent.trim();
     upDown = e.target.dataset.sort
+    sortAdvancedI.forEach(i => {
+        if (i.dataset.sort !== upDown || i.closest("div").textContent.trim() !== sortBy) {
+            i.classList.remove("text-danger");
+        }
+    });
+    if(e.target.classList.contains("text-danger")){
+        upDown = "down";
+    }
+    e.target.classList.toggle("text-danger");
     sortData();
 }
 
@@ -145,9 +164,9 @@ function sortData() {
         return;
     }
     if (upDown === "down") {
-        dataList = dataList.sort((a, b) => a[sortBy] - b[sortBy]);
-    } else if (upDown === "up") {
         dataList = dataList.sort((a, b) => b[sortBy] - a[sortBy]);
+    } else if (upDown === "up") {
+        dataList = dataList.sort((a, b) => a[sortBy] - b[sortBy]);
     }
     renderData(dataList);
 }
