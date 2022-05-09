@@ -208,3 +208,15 @@ body {
 .active {
     background: #f8d45a;
 }
+
+.pages a{
+    text-decoration: none;
+    color: #000;
+    margin-right: 10px;
+    text-align: center;
+}
+
+.b{
+    color: white;
+    cursor: default;
+}

@@ -11,16 +11,22 @@ const resultTxt = document.querySelector(".show-result");
 // 下拉式選單排序
 const select = document.querySelector(".sort-select");
 const sortAdvanced = document.querySelector(".js-sort-advanced");
-const sortAdvancedI = document.querySelectorAll(".js-sort-advanced i")
+const sortAdvancedI = document.querySelectorAll(".js-sort-advanced i");
 // mobile select
-const mobileSelect = document.querySelector(".mobile-select")
+const mobileSelect = document.querySelector(".mobile-select");
+// table 換頁
+const pageChange = document.querySelector(".pages");
+const pageNum = document.querySelector(".pageNum");
+const totalPages = document.querySelector(".totalPages");
 
 let data = [];
 let dataList = [];
+let pageData = [];
+let cropNum = "";
 let cropType = "";
 let sortBy = "";
 let upDown = "";
-
+let i = 0;
 //資料串接功能  渲染資料
 function renderData(data) {
     let str = ""
@@ -61,24 +67,29 @@ function chooseCropType(e) {
         }
     });
     e.target.classList.toggle("active");
-    if (type !== cropType) {
-        cropType = type;
+    if (type !== cropNum) {
+        cropNum = type;
     } else {
-        cropType = "";
+        cropNum = "";
     }
     resultTxt.textContent = "";
     cropName.value = "";
     if (e.target.classList.contains("active")) {
-        if (cropType) {
-            dataList = data.filter(i => i.種類代碼 === cropType);
+        if (cropNum) {
+            dataList = data.filter(i => i.種類代碼 === cropNum);
+            cropType = e.target.textContent;
         }
     } else {
         dataList = data
+        cropType = "全部作物";
     }
+    i = 0;
     productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">資料載入中...</td></tr>`
+    resultTxt.textContent = `查看「${cropType}」的比價結果`;
     setTimeout(() => {
-        renderData(dataList);
-    }, 1000);
+        resultTxt.textContent = `查看「${cropType}」的比價結果，共有「 ${dataList.length} 」筆`
+        updateData()
+    }, 500);
 }
 
 // 搜尋功能
@@ -103,17 +114,18 @@ function searchCrop() {
     }
     resultTxt.classList.remove("text-danger");
     resultTxt.textContent = `查看「${cropName.value}」的比價結果`;
-    cropType = dataList[0].種類代碼;
+    cropNum = dataList[0].種類代碼;
     for (i = 0; i < cropBtn.length; i++) {
-        if (cropBtn[i].dataset.type === cropType) {
+        if (cropBtn[i].dataset.type === cropNum) {
             cropBtn[i].classList.add("active");
         }
     }
+    i = 0;
     productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">資料載入中...</td></tr>`
     setTimeout(() => {
         resultTxt.textContent = `查看「${cropName.value}」的比價結果，共有「 ${dataList.length} 」筆`
-        renderData(dataList);
-    }, 1000);
+        updateData()
+    }, 500);
 }
 // 優化鍵盤搜尋
 cropName.addEventListener('keypress', (e) => {
@@ -139,7 +151,7 @@ function selectSort(e) {
     upDown = "";
 }
 
-sortAdvanced.addEventListener("click", upAndDown)
+sortAdvanced.addEventListener("click", upAndDown);
 
 function upAndDown(e) {
     if (e.target.nodeName !== "I") {
@@ -152,7 +164,7 @@ function upAndDown(e) {
             i.classList.remove("text-danger");
         }
     });
-    if(e.target.classList.contains("text-danger")){
+    if (e.target.classList.contains("text-danger")) {
         upDown = "down";
     }
     e.target.classList.toggle("text-danger");
@@ -168,5 +180,54 @@ function sortData() {
     } else if (upDown === "up") {
         dataList = dataList.sort((a, b) => a[sortBy] - b[sortBy]);
     }
-    renderData(dataList);
+    i = 0;
+    updateData()
 }
+
+pageChange.addEventListener("click", tbodyPage);
+
+function tbodyPage(e) {
+    if (e.target.nodeName !== "A" || dataList.length === 0) {
+        return;
+    }
+    if (i < 0) {
+        i += 10;
+    }else if (i >= dataList.length){
+        i -= 10;
+    }
+    switch (e.target.textContent) {
+        case "第一頁":
+            i = 0;
+            break;
+        case "上一頁":
+            i -= 10;
+            break;
+        case "下一頁":
+            i += 10;
+            break;
+        case "最後一頁":
+            i = dataList.length - dataList.length % 10;
+            break;
+    }
+    if (i < 0 || i >= dataList.length) {
+        return;
+    }
+    console.log(i, dataList.length);
+    updateData();
+}
+
+function updateData() {
+    if (!dataList.length) {
+        productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">請輸入並搜尋想比價的作物名稱^＿^</td></tr>`
+        return;
+    }
+    pageNum.textContent = i / 10 + 1;
+    if (dataList.length % 10 === 0) {
+        totalPages.textContent = Math.ceil(dataList.length / 10);
+    } else {
+        totalPages.textContent = Math.ceil((dataList.length + 0.1) / 10);
+    }
+    pageData = dataList.slice(i, i + 10);
+    renderData(pageData);
+}
+updateData();
