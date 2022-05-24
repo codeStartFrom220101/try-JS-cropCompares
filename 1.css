@@ -220,3 +220,12 @@ body {
     color: white;
     cursor: default;
 }
+
+@media (max-width: 767px) {
+    .b{
+        display: none;
+    }
+    .pagesContent{
+        justify-content: center;
+    }
+}

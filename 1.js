@@ -59,7 +59,13 @@ getData();
 cropBtns.addEventListener("click", chooseCropType);
 
 function chooseCropType(e) {
+    sortAdvancedI.forEach(i => {
+        i.classList.remove("text-danger");
+    });
     if (e.target.nodeName !== "BUTTON") return;
+    if (!cropName.textContent) {
+        resultTxt.classList.remove("text-danger");
+    }
     let type = e.target.dataset.type;
     cropBtn.forEach(i => {
         if (i.dataset.type !== type) {
@@ -96,16 +102,20 @@ function chooseCropType(e) {
 searchBtn.addEventListener("click", searchCrop);
 
 function searchCrop() {
+    cropBtn.forEach(i => {
+        i.classList.remove("active");
+    });
+    sortAdvancedI.forEach(i => {
+        i.classList.remove("text-danger");
+    });
     if (!cropName.value.trim()) {
         resultTxt.textContent = "請輸入作物名稱！";
         resultTxt.classList.add("text-danger");
         productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">請輸入並搜尋想比價的作物名稱^＿^</td></tr>`
+        dataList = [];
+        totalPages.textContent = 1;
         return;
     }
-    cropBtn.forEach(i => {
-        i.classList.remove("active");
-    });
-
     dataList = data.filter(i => i.作物名稱.match(cropName.value));
     if (!dataList.length) {
         resultTxt.textContent = "";
@@ -114,12 +124,17 @@ function searchCrop() {
     }
     resultTxt.classList.remove("text-danger");
     resultTxt.textContent = `查看「${cropName.value}」的比價結果`;
-    cropNum = dataList[0].種類代碼;
-    for (i = 0; i < cropBtn.length; i++) {
-        if (cropBtn[i].dataset.type === cropNum) {
-            cropBtn[i].classList.add("active");
-        }
+    
+    if (dataList.filter(i => i.種類代碼 === "N04").length) {
+        cropBtn[0].classList.add("active");
     }
+    if (dataList.filter(i => i.種類代碼 === "N05").length) {
+        cropBtn[1].classList.add("active");
+    }
+    if (dataList.filter(i => i.種類代碼 === "N06").length) {
+        cropBtn[2].classList.add("active");
+    }
+
     i = 0;
     productsList.innerHTML = `<tr><td colspan="7" class="text-center p-3">資料載入中...</td></tr>`
     setTimeout(() => {
@@ -136,6 +151,8 @@ cropName.addEventListener('keypress', (e) => {
 
 // 下拉式選單排序
 select.addEventListener("change", selectSort);
+// mobile
+mobileSelect.addEventListener("change", selectSort);
 
 function selectSort(e) {
     if (!e.target.value) {
@@ -144,12 +161,14 @@ function selectSort(e) {
     sortAdvancedI.forEach(i => {
         i.classList.remove("text-danger");
     });
-    sortBy = e.target.value.slice(1, select.value.length - 2);
+    sortBy = e.target.value;
     console.log(sortBy);
     upDown = "down";
     sortData();
     upDown = "";
 }
+
+
 
 sortAdvanced.addEventListener("click", upAndDown);
 
@@ -158,6 +177,8 @@ function upAndDown(e) {
         return;
     }
     sortBy = e.target.closest("div").textContent.trim();
+    select.value = sortBy;
+    mobileSelect.value = sortBy;
     upDown = e.target.dataset.sort
     sortAdvancedI.forEach(i => {
         if (i.dataset.sort !== upDown || i.closest("div").textContent.trim() !== sortBy) {
@@ -166,6 +187,8 @@ function upAndDown(e) {
     });
     if (e.target.classList.contains("text-danger")) {
         upDown = "down";
+        select.value = "排序";
+        mobileSelect.value = "排序";
     }
     e.target.classList.toggle("text-danger");
     sortData();
@@ -192,7 +215,7 @@ function tbodyPage(e) {
     }
     if (i < 0) {
         i += 10;
-    }else if (i >= dataList.length){
+    } else if (i >= dataList.length) {
         i -= 10;
     }
     switch (e.target.textContent) {
